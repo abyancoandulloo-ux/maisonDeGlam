@@ -1,0 +1,15 @@
+# robots.txt for maisondeglam.com
+# Allow all crawlers full access
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://maisondeglam.com/sitemap.xml
+
+# Respect crawl delay (optional)
+Crawl-delay: 2
+
+# Disallow sensitive directories (if any)
+# Disallow: /admin/
+# Disallow: /private/
