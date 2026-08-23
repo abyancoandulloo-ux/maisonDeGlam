@@ -65,7 +65,6 @@
 
     <!-- ============================================================
     STRUCTURED DATA (JSON-LD) — TRUNCATED FOR BREVITY
-    Full version available in the complete file
     ============================================================ -->
     <script type="application/ld+json">
         {
@@ -588,8 +587,15 @@
             padding-top: 100%;
             background: rgba(0, 0, 0, 0.3);
             overflow: hidden;
-            cursor: pointer;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
+        .carousel-container:active {
+            cursor: grabbing;
+        }
+
         .carousel-slides {
             position: absolute;
             top: 0;
@@ -598,7 +604,9 @@
             height: 100%;
             display: flex;
             transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
         }
+
         .carousel-slide {
             min-width: 100%;
             height: 100%;
@@ -606,11 +614,15 @@
             align-items: center;
             justify-content: center;
             background: rgba(0, 0, 0, 0.2);
+            pointer-events: none;
         }
         .carousel-slide img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            pointer-events: none;
+            -webkit-user-drag: none;
+            user-drag: none;
         }
 
         .carousel-arrow {
@@ -635,7 +647,8 @@
             opacity: 0;
             pointer-events: none;
         }
-        .product-card:hover .carousel-arrow {
+        .product-card:hover .carousel-arrow,
+        .carousel-container:hover .carousel-arrow {
             opacity: 1;
             pointer-events: auto;
         }
@@ -658,6 +671,7 @@
             z-index: 3;
             display: flex;
             gap: 6px;
+            pointer-events: none;
         }
         .carousel-dot {
             width: 6px;
@@ -666,6 +680,7 @@
             background: rgba(255, 255, 255, 0.3);
             transition: all 0.3s ease;
             cursor: pointer;
+            pointer-events: auto;
         }
         .carousel-dot.active {
             background: var(--gold);
@@ -760,6 +775,8 @@
             letter-spacing: 0.5px;
             cursor: pointer;
             transition: all 0.3s ease;
+            position: relative;
+            z-index: 4;
         }
         .btn-add-cart:hover {
             background: rgba(212, 175, 122, 0.25);
@@ -928,13 +945,11 @@
             color: rgba(255, 255, 255, 0.1);
         }
 
-        /* ===== CART FOOTER — STICKY FOR MOBILE ===== */
         .cart-footer {
             padding: 20px 24px;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             background: #141111;
             flex-shrink: 0;
-            /* Position sticky for mobile to keep total visible */
             position: sticky;
             bottom: 0;
             z-index: 5;
@@ -1063,6 +1078,9 @@
             background: #0f0d0d;
             position: relative;
             overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .modal-carousel .carousel-slides {
             position: absolute;
@@ -1072,6 +1090,7 @@
             height: 100%;
             display: flex;
             transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
         }
         .modal-carousel .carousel-slide {
             min-width: 100%;
@@ -1086,6 +1105,9 @@
             height: 100%;
             object-fit: contain;
             padding: 20px;
+            pointer-events: none;
+            -webkit-user-drag: none;
+            user-drag: none;
         }
         .modal-carousel .carousel-arrow {
             opacity: 1;
@@ -1320,7 +1342,6 @@
                 border-radius: 0;
             }
 
-            /* Ensure cart footer stays visible on mobile */
             .cart-footer {
                 position: sticky;
                 bottom: 0;
@@ -1337,6 +1358,15 @@
             .btn-checkout-whatsapp {
                 padding: 12px;
                 font-size: 0.8rem;
+            }
+
+            /* Show arrows always on mobile for better UX */
+            .carousel-arrow {
+                opacity: 0.6 !important;
+                pointer-events: auto !important;
+                width: 28px;
+                height: 28px;
+                font-size: 0.7rem;
             }
         }
 
@@ -1377,6 +1407,11 @@
             }
             .modal-detail .desc {
                 font-size: 0.85rem;
+            }
+            .carousel-arrow {
+                width: 24px;
+                height: 24px;
+                font-size: 0.6rem;
             }
         }
 
@@ -2077,11 +2112,11 @@
                 }
 
                 card.innerHTML = `
-                    <div class="carousel-container" data-product="${idx}">
+                    <div class="carousel-container" data-product="${idx}" data-total="${product.images.length}">
                         <div class="carousel-slides" id="slides-${idx}">
                             ${product.images.map(img => `
                                 <div class="carousel-slide">
-                                    <img src="${img}" alt="${product.brand} ${product.name}" loading="lazy" onerror="this.style.display='none'" />
+                                    <img src="${img}" alt="${product.brand} ${product.name}" loading="lazy" onerror="this.style.display='none'" draggable="false" />
                                 </div>
                             `).join('')}
                         </div>
@@ -2106,6 +2141,13 @@
                         <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${product.id}', event)">Add to Cart</button>
                     </div>
                 `;
+
+                // ── ADD TOUCH / SWIPE SUPPORT ──
+                const container = card.querySelector('.carousel-container');
+                if (container && product.images.length > 1) {
+                    setupCarouselSwipe(container, idx);
+                }
+
                 // Click on card (not on buttons/arrows) opens modal
                 card.addEventListener('click', function(e) {
                     if (!e.target.closest('.carousel-arrow') && !e.target.closest('.carousel-dot') && !e
@@ -2114,6 +2156,102 @@
                     }
                 });
                 grid.appendChild(card);
+            });
+        }
+
+        // ── SWIPE / TOUCH SETUP ──
+        function setupCarouselSwipe(container, productIdx) {
+            let startX = 0;
+            let currentX = 0;
+            let isDragging = false;
+            let isSwiping = false;
+            const slides = container.querySelector('.carousel-slides');
+            const total = products[productIdx].images.length;
+            let currentIndex = getSlideIndex(productIdx);
+
+            // Touch events
+            container.addEventListener('touchstart', function(e) {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                currentX = startX;
+                isDragging = true;
+                isSwiping = false;
+                slides.style.transition = 'none';
+            }, { passive: true });
+
+            container.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                const touch = e.touches[0];
+                const diff = touch.clientX - startX;
+                if (Math.abs(diff) > 10) {
+                    isSwiping = true;
+                    e.preventDefault();
+                }
+                const offset = -currentIndex * 100 + (diff / container.offsetWidth) * 100;
+                slides.style.transform = `translateX(${offset}%)`;
+            }, { passive: false });
+
+            container.addEventListener('touchend', function(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+                if (isSwiping) {
+                    const diff = (e.changedTouches[0].clientX - startX) / container.offsetWidth;
+                    if (diff < -0.15 && currentIndex < total - 1) {
+                        currentIndex++;
+                    } else if (diff > 0.15 && currentIndex > 0) {
+                        currentIndex--;
+                    }
+                }
+
+                slideIndices[productIdx] = currentIndex;
+                slides.style.transform = `translateX(-${currentIndex * 100}%)`;
+                updateDots(productIdx, currentIndex);
+                isSwiping = false;
+            }, { passive: true });
+
+            // Mouse drag support (desktop)
+            let mouseStartX = 0;
+            let isMouseDown = false;
+
+            container.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                mouseStartX = e.clientX;
+                isMouseDown = true;
+                isSwiping = false;
+                slides.style.transition = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isMouseDown) return;
+                const diff = e.clientX - mouseStartX;
+                if (Math.abs(diff) > 10) {
+                    isSwiping = true;
+                }
+                const offset = -currentIndex * 100 + (diff / container.offsetWidth) * 100;
+                slides.style.transform = `translateX(${offset}%)`;
+            });
+
+            document.addEventListener('mouseup', function(e) {
+                if (!isMouseDown) return;
+                isMouseDown = false;
+                slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+                if (isSwiping) {
+                    const diff = (e.clientX - mouseStartX) / container.offsetWidth;
+                    if (diff < -0.15 && currentIndex < total - 1) {
+                        currentIndex++;
+                    } else if (diff > 0.15 && currentIndex > 0) {
+                        currentIndex--;
+                    }
+                }
+
+                slideIndices[productIdx] = currentIndex;
+                slides.style.transform = `translateX(-${currentIndex * 100}%)`;
+                updateDots(productIdx, currentIndex);
+                isSwiping = false;
             });
         }
 
@@ -2133,6 +2271,7 @@
             let current = getSlideIndex(productIdx);
             current = (current + dir + total) % total;
             slideIndices[productIdx] = current;
+            slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             slides.style.transform = `translateX(-${current * 100}%)`;
             updateDots(productIdx, current);
         }
@@ -2142,6 +2281,7 @@
             const slides = document.getElementById(`slides-${productIdx}`);
             if (!slides) return;
             slideIndices[productIdx] = index;
+            slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             slides.style.transform = `translateX(-${index * 100}%)`;
             updateDots(productIdx, index);
         }
@@ -2154,13 +2294,24 @@
             });
         }
 
-        // Click on carousel to advance
+        // Click on carousel to advance (fallback)
         document.addEventListener('click', function(e) {
             const container = e.target.closest('.carousel-container');
-            if (container && !e.target.closest('.carousel-arrow') && !e.target.closest('.carousel-dot')) {
+            if (container && !e.target.closest('.carousel-arrow') && !e.target.closest('.carousel-dot') && !e
+                .target.closest('.btn-add-cart')) {
                 const idx = parseInt(container.dataset.product);
                 if (!isNaN(idx)) {
-                    changeSlide(idx, 1, e);
+                    const slides = document.getElementById(`slides-${idx}`);
+                    if (slides) {
+                        // Don't advance if user was swiping
+                        const total = products[idx].images.length;
+                        let current = getSlideIndex(idx);
+                        current = (current + 1 + total) % total;
+                        slideIndices[idx] = current;
+                        slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        slides.style.transform = `translateX(-${current * 100}%)`;
+                        updateDots(idx, current);
+                    }
                 }
             }
         });
@@ -2189,11 +2340,11 @@
             }
 
             modalBody.innerHTML = `
-                <div class="modal-carousel">
+                <div class="modal-carousel" id="modalCarousel">
                     <div class="carousel-slides" id="modalSlides">
                         ${product.images.map(img => `
                             <div class="carousel-slide">
-                                <img src="${img}" alt="${product.brand} ${product.name}" loading="lazy" onerror="this.style.display='none'" />
+                                <img src="${img}" alt="${product.brand} ${product.name}" loading="lazy" onerror="this.style.display='none'" draggable="false" />
                             </div>
                         `).join('')}
                     </div>
@@ -2233,8 +2384,115 @@
             const slides = document.getElementById('modalSlides');
             if (slides) slides.style.transform = 'translateX(0)';
 
+            // Setup modal carousel swipe
+            const modalCarousel = document.getElementById('modalCarousel');
+            if (modalCarousel && product.images.length > 1) {
+                setupModalSwipe(modalCarousel);
+            }
+
             modal.classList.add('open');
             document.body.style.overflow = 'hidden';
+        }
+
+        // ── MODAL SWIPE ──
+        function setupModalSwipe(container) {
+            let startX = 0;
+            let isDragging = false;
+            let isSwiping = false;
+            const slides = container.querySelector('.carousel-slides');
+            const total = products.find(p => p.id === modalProductId).images.length;
+            let currentIndex = 0;
+
+            container.addEventListener('touchstart', function(e) {
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                isDragging = true;
+                isSwiping = false;
+                slides.style.transition = 'none';
+            }, { passive: true });
+
+            container.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                const touch = e.touches[0];
+                const diff = touch.clientX - startX;
+                if (Math.abs(diff) > 10) {
+                    isSwiping = true;
+                    e.preventDefault();
+                }
+                const offset = -currentIndex * 100 + (diff / container.offsetWidth) * 100;
+                slides.style.transform = `translateX(${offset}%)`;
+            }, { passive: false });
+
+            container.addEventListener('touchend', function(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+                if (isSwiping) {
+                    const diff = (e.changedTouches[0].clientX - startX) / container.offsetWidth;
+                    if (diff < -0.15 && currentIndex < total - 1) {
+                        currentIndex++;
+                    } else if (diff > 0.15 && currentIndex > 0) {
+                        currentIndex--;
+                    }
+                }
+
+                modalSlideIndex = currentIndex;
+                slides.style.transform = `translateX(-${currentIndex * 100}%)`;
+                updateModalDots(currentIndex);
+                isSwiping = false;
+            }, { passive: true });
+
+            // Mouse drag support for modal
+            let mouseStartX = 0;
+            let isMouseDown = false;
+
+            container.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                mouseStartX = e.clientX;
+                isMouseDown = true;
+                isSwiping = false;
+                slides.style.transition = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isMouseDown) return;
+                const diff = e.clientX - mouseStartX;
+                if (Math.abs(diff) > 10) {
+                    isSwiping = true;
+                }
+                const offset = -currentIndex * 100 + (diff / container.offsetWidth) * 100;
+                slides.style.transform = `translateX(${offset}%)`;
+            });
+
+            document.addEventListener('mouseup', function(e) {
+                if (!isMouseDown) return;
+                isMouseDown = false;
+                slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+                if (isSwiping) {
+                    const diff = (e.clientX - mouseStartX) / container.offsetWidth;
+                    if (diff < -0.15 && currentIndex < total - 1) {
+                        currentIndex++;
+                    } else if (diff > 0.15 && currentIndex > 0) {
+                        currentIndex--;
+                    }
+                }
+
+                modalSlideIndex = currentIndex;
+                slides.style.transform = `translateX(-${currentIndex * 100}%)`;
+                updateModalDots(currentIndex);
+                isSwiping = false;
+            });
+        }
+
+        function updateModalDots(active) {
+            const dots = document.getElementById('modalDots');
+            if (!dots) return;
+            dots.querySelectorAll('.carousel-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === active);
+            });
         }
 
         function closeModal(e) {
@@ -2250,25 +2508,23 @@
             if (!product) return;
             const total = product.images.length;
             modalSlideIndex = (modalSlideIndex + dir + total) % total;
-            updateModalSlide();
+            const slides = document.getElementById('modalSlides');
+            if (slides) {
+                slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                slides.style.transform = `translateX(-${modalSlideIndex * 100}%)`;
+            }
+            updateModalDots(modalSlideIndex);
         }
 
         function changeModalSlideTo(index, e) {
             if (e) e.stopPropagation();
             modalSlideIndex = index;
-            updateModalSlide();
-        }
-
-        function updateModalSlide() {
             const slides = document.getElementById('modalSlides');
-            if (!slides) return;
-            slides.style.transform = `translateX(-${modalSlideIndex * 100}%)`;
-            const dots = document.getElementById('modalDots');
-            if (dots) {
-                dots.querySelectorAll('.carousel-dot').forEach((dot, i) => {
-                    dot.classList.toggle('active', i === modalSlideIndex);
-                });
+            if (slides) {
+                slides.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                slides.style.transform = `translateX(-${modalSlideIndex * 100}%)`;
             }
+            updateModalDots(modalSlideIndex);
         }
 
         function changeModalQty(delta) {
@@ -2311,7 +2567,6 @@
                 btn.classList.remove('added');
             }, 1500);
 
-            // Close modal after adding and open cart
             setTimeout(() => {
                 closeModal();
                 openCart();
@@ -2443,7 +2698,6 @@
             document.body.style.overflow = '';
         }
 
-        // ── CHECKOUT VIA WHATSAPP ──
         function checkoutWhatsApp() {
             if (cart.length === 0) return;
 
