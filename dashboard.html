@@ -7,16 +7,10 @@
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
-
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-    <!-- Supabase JS -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <style>
-        /* === styles (same as before, omitted for brevity) === */
-        /* ... (keep all the styles from the previous working version) ... */
+        /* Same styles as before, omitted for brevity */
         * {
             margin: 0;
             padding: 0;
@@ -36,19 +30,20 @@
         .gold {
             color: #d4af7a;
         }
-        h1,
-        h2 {
+        h1 {
             font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
             font-weight: 400;
             letter-spacing: 0.04em;
         }
-        h1 {
-            font-size: 2.5rem;
-        }
         h2 {
+            font-family: 'Cormorant Garamond', serif;
             font-size: 1.8rem;
-            margin-bottom: 0.5rem;
+            font-weight: 400;
+            letter-spacing: 0.04em;
+            margin-bottom: 1rem;
         }
+
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -58,17 +53,101 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
-        .actions-bar {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
+
+        .form-section {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 1.5rem;
             margin: 1.5rem 0;
+            backdrop-filter: blur(8px);
         }
+        .form-section h2 {
+            margin-bottom: 1rem;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 180px;
+            margin-bottom: 0.8rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 0.2rem;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.3s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #d4af7a;
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .form-group textarea {
+            min-height: 70px;
+            resize: vertical;
+        }
+        .form-group .full-width {
+            flex: 100%;
+        }
+
+        .file-upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .file-upload-area:hover {
+            border-color: #d4af7a;
+            background: rgba(212, 175, 122, 0.04);
+        }
+        .file-upload-area input {
+            display: none;
+        }
+
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .image-preview img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, #d4af7a, #b8945a);
             color: #0f0d0d;
             border: none;
-            padding: 0.6rem 1.8rem;
+            padding: 0.6rem 2rem;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
@@ -78,18 +157,6 @@
         .btn-primary:hover {
             transform: scale(1.04);
         }
-        .btn-danger {
-            background: rgba(248, 113, 113, 0.15);
-            color: #f87171;
-            border: 1px solid rgba(248, 113, 113, 0.2);
-            padding: 0.4rem 1rem;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .btn-danger:hover {
-            background: rgba(248, 113, 113, 0.25);
-        }
         .btn-secondary {
             background: rgba(255, 255, 255, 0.06);
             color: #fff;
@@ -98,10 +165,31 @@
             border-radius: 40px;
             cursor: pointer;
             transition: 0.3s;
+            font-family: 'Inter', sans-serif;
         }
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.12);
         }
+        .btn-danger {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-danger:hover {
+            background: rgba(248, 113, 113, 0.25);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
         .product-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -167,106 +255,7 @@
         .card-actions button {
             font-size: 0.75rem;
         }
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 1rem;
-        }
-        .modal-overlay.open {
-            display: flex;
-        }
-        .modal-content {
-            background: #1a1717;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 20px;
-            padding: 2rem;
-            max-width: 560px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .modal-content h2 {
-            margin-bottom: 1.2rem;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        .form-group label {
-            display: block;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 0.2rem;
-        }
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 0.6rem 0.8rem;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            outline: none;
-            transition: 0.3s;
-        }
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            border-color: #d4af7a;
-            background: rgba(255, 255, 255, 0.06);
-        }
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-        .form-row {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .form-row .form-group {
-            flex: 1;
-            min-width: 120px;
-        }
-        .file-upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-            color: rgba(255, 255, 255, 0.4);
-        }
-        .file-upload-area:hover {
-            border-color: #d4af7a;
-            background: rgba(212, 175, 122, 0.04);
-        }
-        .file-upload-area input {
-            display: none;
-        }
-        .image-preview {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        .image-preview img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
-        }
+
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -287,16 +276,20 @@
         .toast.show {
             opacity: 1;
         }
+
         @media (max-width: 600px) {
             .product-grid {
                 grid-template-columns: 1fr;
+            }
+            .form-group {
+                min-width: 100%;
             }
             .top-bar {
                 flex-direction: column;
                 align-items: stretch;
             }
-            .modal-content {
-                padding: 1.2rem;
+            .form-actions {
+                flex-direction: column;
             }
         }
     </style>
@@ -304,153 +297,174 @@
 <body>
 
     <div class="container">
+        <!-- ===== TOP BAR ===== -->
         <div class="top-bar">
             <h1>Maison <span class="gold">De</span> Glam <span style="font-size: 0.8rem; font-weight: 300; color: rgba(255,255,255,0.3);">Admin</span></h1>
+            <button class="btn-secondary" onclick="fetchProducts()"><i class="fa-solid fa-rotate"></i> Refresh</button>
         </div>
 
-        <div class="actions-bar">
-            <button class="btn-primary" id="addProductBtn"><i class="fa-solid fa-plus"></i> Add Product</button>
-            <button class="btn-secondary" id="refreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
-        </div>
+        <!-- ===== FORM SECTION ===== -->
+        <div class="form-section">
+            <h2 id="formTitle">Add New Product</h2>
+            <input type="hidden" id="editId" value="" />
 
-        <div id="productGrid" class="product-grid">
-            <!-- Products loaded here -->
-        </div>
-    </div>
-
-    <!-- MODAL -->
-    <div class="modal-overlay" id="productModal">
-        <div class="modal-content">
-            <h2 id="modalTitle">Add Product</h2>
-            <form id="productForm" onsubmit="saveProduct(event)">
-                <input type="hidden" id="editId" value="" />
-
+            <div class="form-row">
                 <div class="form-group">
                     <label>Brand *</label>
-                    <input type="text" id="brand" required placeholder="e.g. HUDA BEAUTY" />
+                    <input type="text" id="brand" placeholder="e.g. HUDA BEAUTY" />
                 </div>
                 <div class="form-group">
                     <label>Product Name *</label>
-                    <input type="text" id="name" required placeholder="e.g. Easy Blur" />
+                    <input type="text" id="name" placeholder="e.g. Easy Blur" />
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Size (e.g. 30ml)</label>
-                        <input type="text" id="size" placeholder="30ml" />
-                    </div>
-                    <div class="form-group">
-                        <label>Price (MUR) *</label>
-                        <input type="number" id="price" required step="0.01" placeholder="2500" />
-                    </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Size (e.g. 30ml)</label>
+                    <input type="text" id="size" placeholder="30ml" />
                 </div>
                 <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="description" placeholder="Product description..."></textarea>
+                    <label>Price (MUR) *</label>
+                    <input type="number" id="price" step="0.01" placeholder="2500" />
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>In Stock</label>
-                        <select id="inStock">
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Promo (e.g. On sale till 31 Aug)</label>
-                        <input type="text" id="promo" placeholder="On promo till 31 August" />
-                    </div>
+                <div class="form-group">
+                    <label>In Stock</label>
+                    <select id="inStock">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Promo (e.g. On sale till 31 Aug)</label>
+                    <input type="text" id="promo" placeholder="On promo till 31 August" />
                 </div>
                 <div class="form-group">
                     <label>Shades (comma separated)</label>
                     <input type="text" id="shades" placeholder="Linen, Porcelaine, Chantily" />
                 </div>
+            </div>
 
-                <div class="form-group">
+            <div class="form-row">
+                <div class="form-group" style="flex:100%;">
+                    <label>Description</label>
+                    <textarea id="description" placeholder="Product description..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex:100%;">
                     <label>Product Images</label>
-                    <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div class="file-upload-area" id="uploadArea">
                         <i class="fa-regular fa-image" style="font-size: 1.5rem; display: block; margin-bottom: 0.3rem;"></i>
                         Click to upload images
-                        <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFileSelect(event)" />
+                        <input type="file" id="fileInput" accept="image/*" multiple />
                     </div>
                     <div id="imagePreviewContainer" class="image-preview"></div>
-                    <small style="color: rgba(255,255,255,0.3);">Upload images; they will be stored in Supabase Storage.</small>
+                    <small style="color: rgba(255,255,255,0.3);">Images stored in Supabase Storage.</small>
                 </div>
+            </div>
 
-                <div style="display: flex; gap: 0.8rem; margin-top: 1.5rem;">
-                    <button type="submit" class="btn-primary" style="flex:1;">Save Product</button>
-                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-                </div>
-            </form>
+            <div class="form-actions">
+                <button class="btn-primary" id="saveBtn"><i class="fa-solid fa-floppy-disk"></i> Save Product</button>
+                <button class="btn-secondary" id="clearBtn"><i class="fa-solid fa-eraser"></i> Clear Form</button>
+            </div>
+        </div>
+
+        <!-- ===== PRODUCT GRID ===== -->
+        <div id="productGrid" class="product-grid">
+            <!-- Products loaded here -->
         </div>
     </div>
 
+    <!-- ===== TOAST ===== -->
     <div id="toast" class="toast"></div>
 
-    <!-- ===== SINGLE SCRIPT BLOCK – NO DUPLICATES ===== -->
+    <!-- =============================================================
+    JAVASCRIPT
+    ============================================================= -->
     <script>
-        // =============================================================
-        // CONFIGURATION
-        // =============================================================
+        // ------------------------------------------------------------
+        // SUPABASE CONFIG
+        // ------------------------------------------------------------
         const SUPABASE_URL = 'https://zjfqatxxksjwxfptxouq.supabase.co/rest/v1/';
         const SUPABASE_ANON_KEY = 'sb_publishable_OxkzTlktWOXW0ZGIgGQ-Ug_cyuZOOEE';
         const BUCKET_NAME = 'glam';
         const TABLE_NAME = 'glam';
 
-        // Create supabase client only once
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Create client
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // =============================================================
+        // ------------------------------------------------------------
         // STATE
-        // =============================================================
+        // ------------------------------------------------------------
         let currentImages = [];
 
-        // =============================================================
-        // GLOBAL FUNCTIONS (used in onclick attributes)
-        // =============================================================
-        window.openAddModal = function() {
-            console.log('openAddModal called');
-            const modal = document.getElementById('productModal');
-            if (!modal) {
-                console.error('Modal not found!');
-                return;
-            }
-            document.getElementById('modalTitle').textContent = 'Add Product';
-            document.getElementById('editId').value = '';
-            document.getElementById('productForm').reset();
-            document.getElementById('imagePreviewContainer').innerHTML = '';
+        // ------------------------------------------------------------
+        // DOM REFS
+        // ------------------------------------------------------------
+        const formTitle = document.getElementById('formTitle');
+        const editId = document.getElementById('editId');
+        const brand = document.getElementById('brand');
+        const name = document.getElementById('name');
+        const size = document.getElementById('size');
+        const price = document.getElementById('price');
+        const description = document.getElementById('description');
+        const inStock = document.getElementById('inStock');
+        const promo = document.getElementById('promo');
+        const shades = document.getElementById('shades');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreviewContainer');
+        const productGrid = document.getElementById('productGrid');
+        const saveBtn = document.getElementById('saveBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // ------------------------------------------------------------
+        // CLEAR FORM
+        // ------------------------------------------------------------
+        function clearForm() {
+            formTitle.textContent = 'Add New Product';
+            editId.value = '';
+            brand.value = '';
+            name.value = '';
+            size.value = '';
+            price.value = '';
+            description.value = '';
+            inStock.value = 'true';
+            promo.value = '';
+            shades.value = '';
+            imagePreview.innerHTML = '';
             currentImages = [];
-            modal.classList.add('open');
-        };
+            fileInput.value = '';
+        }
 
-        window.closeModal = function() {
-            document.getElementById('productModal').classList.remove('open');
-            document.getElementById('productForm').reset();
-            document.getElementById('imagePreviewContainer').innerHTML = '';
-            currentImages = [];
-        };
+        // ------------------------------------------------------------
+        // FETCH PRODUCTS
+        // ------------------------------------------------------------
+        async function fetchProducts() {
+            productGrid.innerHTML = '<p style="color: rgba(255,255,255,0.4);">Loading...</p>';
 
-        window.fetchProducts = async function() {
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = '<p style="color: rgba(255,255,255,0.4);">Loading...</p>';
-
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from(TABLE_NAME)
                 .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) {
                 console.error(error);
-                window.showToast('Error loading products');
-                grid.innerHTML = '<p style="color: #f87171;">Failed to load products.</p>';
+                showToast('Error loading products');
+                productGrid.innerHTML = '<p style="color: #f87171;">Failed to load products.</p>';
                 return;
             }
 
             if (!data || data.length === 0) {
-                grid.innerHTML = '<p style="color: rgba(255,255,255,0.3);">No products yet. Add your first product!</p>';
+                productGrid.innerHTML = '<p style="color: rgba(255,255,255,0.3);">No products yet. Add your first product!</p>';
                 return;
             }
 
-            grid.innerHTML = data.map((p) => `
+            productGrid.innerHTML = data.map((p) => `
                 <div class="product-card">
                     <div>
                         ${p.images && p.images.length > 0
@@ -464,205 +478,248 @@
                     <div class="stock ${p.in_stock ? 'in-stock' : 'out-of-stock'}">${p.in_stock ? 'In Stock' : 'Out of Stock'}</div>
                     ${p.promo ? `<div style="color:#fbbf24; font-size:0.75rem;">${p.promo}</div>` : ''}
                     <div class="card-actions">
-                        <button class="btn-secondary" onclick="window.openEditModal('${p.id}')"><i class="fa-regular fa-pen-to-square"></i> Edit</button>
-                        <button class="btn-danger" onclick="window.deleteProduct('${p.id}')"><i class="fa-regular fa-trash-can"></i> Delete</button>
+                        <button class="btn-secondary" onclick="loadProductForEdit('${p.id}')"><i class="fa-regular fa-pen-to-square"></i> Edit</button>
+                        <button class="btn-danger" onclick="deleteProduct('${p.id}')"><i class="fa-regular fa-trash-can"></i> Delete</button>
                     </div>
                 </div>
             `).join('');
-        };
+        }
 
-        window.openEditModal = function(id) {
-            supabase
+        // ------------------------------------------------------------
+        // LOAD PRODUCT FOR EDIT
+        // ------------------------------------------------------------
+        function loadProductForEdit(id) {
+            supabaseClient
                 .from(TABLE_NAME)
                 .select('*')
                 .eq('id', id)
                 .single()
                 .then(({ data, error }) => {
                     if (error) {
-                        window.showToast('Error loading product');
+                        showToast('Error loading product');
                         return;
                     }
                     if (!data) return;
 
-                    document.getElementById('modalTitle').textContent = 'Edit Product';
-                    document.getElementById('editId').value = data.id;
-                    document.getElementById('brand').value = data.brand || '';
-                    document.getElementById('name').value = data.name || '';
-                    document.getElementById('size').value = data.size || '';
-                    document.getElementById('price').value = data.price || '';
-                    document.getElementById('description').value = data.description || '';
-                    document.getElementById('inStock').value = data.in_stock ? 'true' : 'false';
-                    document.getElementById('promo').value = data.promo || '';
-                    document.getElementById('shades').value = data.shades || '';
+                    formTitle.textContent = 'Edit Product';
+                    editId.value = data.id;
+                    brand.value = data.brand || '';
+                    name.value = data.name || '';
+                    size.value = data.size || '';
+                    price.value = data.price || '';
+                    description.value = data.description || '';
+                    inStock.value = data.in_stock ? 'true' : 'false';
+                    promo.value = data.promo || '';
+                    shades.value = data.shades || '';
 
                     currentImages = data.images || [];
-                    const preview = document.getElementById('imagePreviewContainer');
-                    preview.innerHTML = currentImages.map((url) => `
+                    imagePreview.innerHTML = currentImages.map((url) => `
                         <img src="${url}" alt="product image" />
                     `).join('');
 
-                    document.getElementById('productModal').classList.add('open');
+                    document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
                 });
-        };
+        }
 
-        window.deleteProduct = async function(id) {
-            if (!confirm('Delete this product permanently?')) return;
-
-            const { error } = await supabase
-                .from(TABLE_NAME)
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                window.showToast('Error deleting product');
-                return;
-            }
-
-            window.showToast('Product deleted');
-            window.fetchProducts();
-        };
-
-        // =============================================================
-        // IMAGE UPLOAD
-        // =============================================================
-        window.handleFileSelect = async function(event) {
+        // ------------------------------------------------------------
+        // IMAGE UPLOAD – FIXED VERSION WITH BETTER ERROR HANDLING
+        // ------------------------------------------------------------
+        async function handleFileSelect(event) {
             const files = event.target.files;
             if (!files || files.length === 0) return;
 
-            const preview = document.getElementById('imagePreviewContainer');
+            // Show a loading indicator
+            showToast('Uploading images...');
 
             for (const file of files) {
-                // Show temporary thumbnail
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.opacity = '0.6';
-                    preview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
+                try {
+                    // 1. Show temporary thumbnail
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.opacity = '0.6';
+                        img.dataset.uploading = 'true';
+                        imagePreview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
 
-                // Upload to Supabase Storage
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-                const filePath = fileName;
+                    // 2. Upload to Supabase Storage
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+                    const filePath = `public/${fileName}`; // store in a subfolder for organization
 
-                const { data, error } = await supabase.storage
-                    .from(BUCKET_NAME)
-                    .upload(filePath, file);
+                    console.log(`Uploading ${file.name} as ${filePath}...`);
 
-                if (error) {
-                    console.error('Upload error:', error);
-                    window.showToast(`Failed to upload ${file.name}`);
-                    continue;
-                }
+                    const { data, error } = await supabaseClient.storage
+                        .from(BUCKET_NAME)
+                        .upload(filePath, file, {
+                            cacheControl: '3600',
+                            upsert: false,
+                            contentType: file.type
+                        });
 
-                // Get public URL
-                const { data: urlData } = supabase.storage
-                    .from(BUCKET_NAME)
-                    .getPublicUrl(filePath);
+                    if (error) {
+                        console.error('Upload error:', error);
+                        showToast(`Failed to upload ${file.name}: ${error.message}`);
+                        // Remove the temporary thumbnail
+                        const thumbs = imagePreview.querySelectorAll('img');
+                        const lastThumb = thumbs[thumbs.length - 1];
+                        if (lastThumb && lastThumb.dataset.uploading) {
+                            lastThumb.remove();
+                        }
+                        continue;
+                    }
 
-                const publicUrl = urlData.publicUrl;
-                currentImages.push(publicUrl);
+                    console.log('Upload success:', data);
 
-                // Update thumbnail to full image
-                const thumbs = preview.querySelectorAll('img');
-                const lastThumb = thumbs[thumbs.length - 1];
-                if (lastThumb) {
-                    lastThumb.src = publicUrl;
-                    lastThumb.style.opacity = '1';
+                    // 3. Get public URL
+                    const { data: urlData } = supabaseClient.storage
+                        .from(BUCKET_NAME)
+                        .getPublicUrl(filePath);
+
+                    const publicUrl = urlData.publicUrl;
+                    currentImages.push(publicUrl);
+
+                    // 4. Update thumbnail to full image
+                    const thumbs = imagePreview.querySelectorAll('img');
+                    const lastThumb = thumbs[thumbs.length - 1];
+                    if (lastThumb && lastThumb.dataset.uploading) {
+                        lastThumb.src = publicUrl;
+                        lastThumb.style.opacity = '1';
+                        delete lastThumb.dataset.uploading;
+                    } else {
+                        // fallback: add a new image
+                        const img = document.createElement('img');
+                        img.src = publicUrl;
+                        imagePreview.appendChild(img);
+                    }
+
+                    showToast(`Uploaded ${file.name}`);
+                } catch (err) {
+                    console.error('Unexpected error:', err);
+                    showToast(`Error uploading ${file.name}: ${err.message}`);
                 }
             }
 
-            document.getElementById('fileInput').value = '';
-        };
+            fileInput.value = '';
+            showToast('All uploads processed.');
+        }
 
-        // =============================================================
+        // ------------------------------------------------------------
         // SAVE PRODUCT
-        // =============================================================
-        window.saveProduct = async function(event) {
-            event.preventDefault();
+        // ------------------------------------------------------------
+        async function saveProduct() {
+            const id = editId.value;
+            const brandVal = brand.value.trim();
+            const nameVal = name.value.trim();
+            const sizeVal = size.value.trim();
+            const priceVal = parseFloat(price.value);
+            const descriptionVal = description.value.trim();
+            const inStockVal = inStock.value === 'true';
+            const promoVal = promo.value.trim();
+            const shadesVal = shades.value.trim();
 
-            const id = document.getElementById('editId').value;
-            const brand = document.getElementById('brand').value.trim();
-            const name = document.getElementById('name').value.trim();
-            const size = document.getElementById('size').value.trim();
-            const price = parseFloat(document.getElementById('price').value);
-            const description = document.getElementById('description').value.trim();
-            const inStock = document.getElementById('inStock').value === 'true';
-            const promo = document.getElementById('promo').value.trim();
-            const shades = document.getElementById('shades').value.trim();
-
-            if (!brand || !name || isNaN(price)) {
-                window.showToast('Please fill in all required fields.');
+            if (!brandVal || !nameVal || isNaN(priceVal)) {
+                showToast('Please fill in Brand, Name, and Price.');
                 return;
             }
 
             const productData = {
-                brand,
-                name,
-                size: size || null,
-                price,
-                description: description || null,
-                in_stock: inStock,
-                promo: promo || null,
-                shades: shades || null,
+                brand: brandVal,
+                name: nameVal,
+                size: sizeVal || null,
+                price: priceVal,
+                description: descriptionVal || null,
+                in_stock: inStockVal,
+                promo: promoVal || null,
+                shades: shadesVal || null,
                 images: currentImages,
                 updated_at: new Date().toISOString()
             };
 
             let result;
             if (id) {
-                result = await supabase
+                result = await supabaseClient
                     .from(TABLE_NAME)
                     .update(productData)
                     .eq('id', id);
             } else {
-                result = await supabase
+                result = await supabaseClient
                     .from(TABLE_NAME)
                     .insert([productData]);
             }
 
             if (result.error) {
                 console.error(result.error);
-                window.showToast('Error saving product');
+                showToast('Error saving product');
                 return;
             }
 
-            window.showToast(id ? 'Product updated!' : 'Product added!');
-            window.closeModal();
-            window.fetchProducts();
-        };
+            showToast(id ? 'Product updated!' : 'Product added!');
+            clearForm();
+            fetchProducts();
+        }
 
-        // =============================================================
+        // ------------------------------------------------------------
+        // DELETE PRODUCT
+        // ------------------------------------------------------------
+        async function deleteProduct(id) {
+            if (!confirm('Delete this product permanently?')) return;
+
+            const { error } = await supabaseClient
+                .from(TABLE_NAME)
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showToast('Error deleting product');
+                return;
+            }
+
+            showToast('Product deleted');
+            fetchProducts();
+        }
+
+        // ------------------------------------------------------------
         // TOAST
-        // =============================================================
-        window.showToast = function(message) {
+        // ------------------------------------------------------------
+        let toastTimer;
+
+        function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.classList.add('show');
-            clearTimeout(window.toastTimer);
-            window.toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
-        };
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
 
-        // =============================================================
-        // EVENT BINDINGS (using IDs instead of inline onclick)
-        // =============================================================
+        // ------------------------------------------------------------
+        // EVENT BINDING
+        // ------------------------------------------------------------
         document.addEventListener('DOMContentLoaded', function() {
-            // Attach click events to buttons
-            document.getElementById('addProductBtn').addEventListener('click', window.openAddModal);
-            document.getElementById('refreshBtn').addEventListener('click', window.fetchProducts);
+            saveBtn.addEventListener('click', saveProduct);
+            clearBtn.addEventListener('click', clearForm);
 
-            // Close modal when clicking outside
-            document.getElementById('productModal').addEventListener('click', function(e) {
-                if (e.target === this) window.closeModal();
+            document.getElementById('uploadArea').addEventListener('click', function() {
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', handleFileSelect);
+
+            fetchProducts();
+
+            document.querySelectorAll('#brand, #name, #size, #price, #promo, #shades').forEach((field) => {
+                field.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveProduct();
+                    }
+                });
             });
 
-            // Load products
-            window.fetchProducts();
-
-            console.log('Dashboard ready.');
+            console.log('Dashboard ready. Upload images by clicking the upload area.');
         });
     </script>
+
 </body>
 </html>
