@@ -64,10 +64,10 @@
     <meta name="twitter:site" content="@maisondeglam" />
 
     <!-- ============================================================
-    STRUCTURED DATA (JSON-LD) – will be injected dynamically
+    STRUCTURED DATA (JSON-LD) – injected dynamically from Supabase
     ============================================================ -->
     <script type="application/ld+json" id="productSchema">
-        /* Injected by JavaScript with all products (hardcoded + database) */
+        /* Injected by JavaScript with all products */
     </script>
 
     <!-- ============================================================
@@ -641,6 +641,31 @@
             font-size: 1.1rem;
             grid-column: 1 / -1;
         }
+        .no-results i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.15);
+        }
+        .no-results .retry-btn {
+            margin-top: 1.2rem;
+            padding: 0.65rem 1.8rem;
+            background: rgba(212, 175, 122, 0.12);
+            border: 1px solid rgba(212, 175, 122, 0.3);
+            color: var(--gold);
+            border-radius: 9999px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .no-results .retry-btn:hover {
+            background: rgba(212, 175, 122, 0.25);
+            border-color: var(--gold);
+            color: #fff;
+        }
 
         /* ===== PRODUCT CARD ===== */
         .product-card {
@@ -653,6 +678,7 @@
             transition: all 0.5s ease;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             cursor: pointer;
+            position: relative;
         }
         .product-card:hover {
             transform: translateY(-6px);
@@ -660,7 +686,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         }
 
-        /* "New" badge for database products */
+        /* "New" badge for recently added products */
         .product-card .new-badge {
             position: absolute;
             top: 10px;
@@ -705,6 +731,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+        .carousel-slide.slide-placeholder {
+            flex-direction: column;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.12);
+            font-size: 2rem;
         }
 
         .carousel-arrow {
@@ -863,6 +895,10 @@
             background: rgba(37, 211, 102, 0.2);
             border-color: #25d366;
             color: #25d366;
+        }
+        .btn-add-cart:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
         }
 
         /* ===== CART SIDEBAR ===== */
@@ -1178,6 +1214,10 @@
             height: 100%;
             object-fit: contain;
             padding: 20px;
+        }
+        .modal-carousel .carousel-slide.slide-placeholder {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.12);
         }
         .modal-carousel .carousel-arrow {
             opacity: 1;
@@ -1680,7 +1720,7 @@
                             <option value="name-az">Name: A to Z</option>
                             <option value="name-za">Name: Z to A</option>
                         </select>
-                        <span class="results-count" id="resultsCount">0 products</span>
+                        <span class="results-count" id="resultsCount">Loading…</span>
                     </div>
                 </div>
 
@@ -1770,7 +1810,7 @@
     </footer>
 
     <!-- ============================================================
-    JAVASCRIPT – Hardcoded products + Supabase fetch + Filter/Search
+    JAVASCRIPT – Supabase-only products + Filter/Search + Cart
     ============================================================ -->
     <script>
         // ── Supabase configuration ──
@@ -1778,435 +1818,16 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_OxkzTlktWOXW0ZGIgGQ-Ug_cyuZOOEE';
         const TABLE_NAME = 'glam';
 
-        // ── Hardcoded products ──
-        const hardcodedProducts = [{
-            id: 'huda-blur',
-            brand: 'HUDA BEAUTY',
-            name: 'Easy Blur',
-            size: '30ml',
-            price: 2500,
-            description: 'A silky, lightweight blurring primer that smooths texture and minimizes pores for a flawless, airbrushed finish.',
-            images: ['images/blur1.jpeg', 'images/blur2.jpeg', 'images/blur3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'charlotte-setting',
-            brand: 'CHARLOTTE TILBURY',
-            name: 'Setting Spray',
-            size: '100ml',
-            price: 2500,
-            description: 'A weightless, fine-mist setting spray that locks makeup in place for up to 16 hours with a dewy, radiant glow.',
-            images: ['images/charlotte1.jpeg', 'images/charlotte2.jpeg', 'images/charlotte3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'gisou-lipoil',
-            brand: 'GISOU',
-            name: 'Lip Oil',
-            size: '',
-            price: 1950,
-            description: 'A nourishing, non-sticky lip oil infused with honey and botanical oils for a glossy, plump, and hydrated pout.',
-            images: ['images/gisou1.jpeg', 'images/gisou2.jpeg', 'images/gisou3.jpeg', 'images/gisou4.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'nars-foundation',
-            brand: 'NARS',
-            name: 'Radiant Longwear Foundation',
-            size: '',
-            price: 2800,
-            description: 'A full-coverage, long-wearing foundation with a natural radiant finish that blurs imperfections and evens skin tone.',
-            images: ['images/nars1.jpeg', 'images/nars2.jpeg', 'images/nars3.jpeg', 'images/nars4.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'anua-azelaic',
-            brand: 'ANUA',
-            name: 'Azelaic Acid 10+',
-            size: '30ml',
-            price: 1300,
-            description: 'A gentle yet effective 10% azelaic acid serum that brightens, evens skin tone, and reduces redness and blemishes.',
-            images: ['images/anua1.jpeg', 'images/anua2.jpeg', 'images/anua3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'elf-blue',
-            brand: 'E.L.F.',
-            name: 'Power Grip Primer',
-            size: '24ml',
-            price: 850,
-            description: 'Hydrates skin infused with hyaluronic acid. A gel-based, tacky primer that grips makeup for all-day wear.',
-            images: ['images/elfBlue1.jpeg', 'images/elfBlue2.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'elf-pink',
-            brand: 'E.L.F.',
-            name: 'Power Grip Primer + 4% Niacinamide',
-            size: '24ml',
-            price: 850,
-            description: 'Even skin tone and minimize pores with this gripping primer infused with 4% niacinamide.',
-            images: ['images/elfPink1.jpeg', 'images/elfPink2.jpeg', 'images/elfPink3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-liquid',
-            brand: 'SHEGLAM',
-            name: 'Liquid Blush',
-            size: '',
-            price: 550,
-            description: 'A highly pigmented, buildable liquid blush that blends seamlessly for a natural, dewy flush of color.',
-            images: ['images/sheglamLiquid1.jpeg', 'images/sheglamLiquid2.jpeg', 'images/sheglamLiquid3.jpeg',
-                'images/sheglamLiquid4.jpeg'
-            ],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-powder',
-            brand: 'SHEGLAM',
-            name: 'Powder Foundation',
-            size: '',
-            price: 850,
-            description: 'A lightweight, buildable powder foundation that provides medium to full coverage with a natural matte finish.',
-            images: ['images/sheglamPowder1.jpeg', 'images/sheglamPowder2.jpeg', 'images/sheglamPowder3.jpeg',
-                'images/sheglamPowder4.jpeg'
-            ],
-            shades: 'Linen, Porcelaine, Chantily, Warm Sand, Butter Cream',
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'tarte-shape',
-            brand: 'TARTE',
-            name: 'Shape Tape Concealer',
-            size: '',
-            price: 1800,
-            description: 'Full-coverage, long-wearing concealer that brightens, covers, and contours with a lightweight, creamy texture.',
-            images: ['images/tarteShape1.jpeg', 'images/tarteShape2.jpeg', 'images/tarteShape3.jpeg'],
-            promo: 'On promo till 31 August',
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'nars-cream',
-            brand: 'NARS',
-            name: 'Radiant Cream Concealer',
-            size: '',
-            price: 1950,
-            description: 'A creamy, full-coverage concealer with a radiant finish that brightens undereyes and covers imperfections.',
-            images: ['images/narsCream1.jpeg', 'images/narsCream2.jpeg', 'images/narsCream3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'nars-powder',
-            brand: 'NARS',
-            name: 'Powder Blush',
-            size: '',
-            price: 1475,
-            description: 'A silky, finely-milled powder blush that delivers buildable color with a natural, radiant finish.',
-            images: ['images/narsPowder1.jpeg', 'images/narsPowder2.jpeg', 'images/narsPowder3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'huda-powder',
-            brand: 'HUDA BEAUTY',
-            name: 'Loose & Setting Powder',
-            size: '',
-            price: 2750,
-            description: 'A weightless, ultra-fine loose powder that sets makeup with a soft-focus, blurred finish.',
-            images: ['images/hudaPowder1.jpeg', 'images/hudaPowder2.jpeg', 'images/hudaPowder3.jpeg',
-                'images/hudaPowder4.jpeg'
-            ],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-spray',
-            brand: 'SHEGLAM',
-            name: 'LOCK\'D Setting Spray',
-            size: '',
-            price: 750,
-            description: 'A fine-mist setting spray that locks makeup in place for hours with a natural, non-sticky finish.',
-            images: ['images/sheglamSpray1.jpeg', 'images/sheglamSpray2.jpeg', 'images/sheglamSpray3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-fresh',
-            brand: 'SHEGLAM',
-            name: 'LOCK\'D Setting Spray — Fresh',
-            size: '',
-            price: 750,
-            description: 'A refreshing fine-mist setting spray that locks makeup in place with a dewy, radiant finish.',
-            images: ['images/sheglamFresh1.jpeg', 'images/sheglamFresh2.jpeg', 'images/sheglamFresh3.jpeg',
-                'images/sheglamFresh4.jpeg'
-            ],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-matt-spray',
-            brand: 'SHEGLAM',
-            name: 'Setting Spray Matt Oil Control',
-            size: '',
-            price: 750,
-            description: 'Oil-control setting spray that locks makeup with a matte, shine-free finish.',
-            images: ['images/sheglamMatt1.jpeg', 'images/sheglamMatt2.jpeg', 'images/sheglamMatt3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'centella-tone',
-            brand: 'CENTELLA',
-            name: 'Tone Brightening Glow Skin Fade Your Spot',
-            size: '200ml',
-            price: 1200,
-            description: 'A brightening toner that fades dark spots and evens skin tone. Infused with centella asiatica.',
-            images: ['images/centella1.jpeg', 'images/centella2.jpeg', 'images/centella3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'madagascar-foam',
-            brand: 'MADAGASCAR CENTELLA',
-            name: 'Tea-Trica BHA Foam',
-            size: '125ml',
-            price: 825,
-            description: 'A gentle yet effective BHA foam cleanser that removes impurities, unclogs pores, and calms irritation.',
-            images: ['images/madagascar1.jpeg', 'images/madagascar2.jpeg', 'images/madagascar3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-matt-foundation',
-            brand: 'SHEGLAM',
-            name: 'Matt Foundation',
-            size: '',
-            price: 950,
-            description: 'A full-coverage, matte foundation that blurs imperfections and controls shine for a flawless finish.',
-            images: ['images/matt1.jpeg', 'images/matt2.jpeg', 'images/matt3.jpeg', 'images/matt4.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-good-grip',
-            brand: 'SHEGLAM',
-            name: 'Good Grip Primer',
-            size: '',
-            price: 850,
-            description: 'A tacky, gripping primer that holds makeup in place all day. Smooths texture and minimizes pores.',
-            images: ['images/grip1.jpeg', 'images/grip2.jpeg', 'images/grip3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-blueberry',
-            brand: 'SHEGLAM',
-            name: 'Good Grip Hydrating Primer AHA+Blueberry',
-            size: '',
-            price: 850,
-            description: 'A hydrating primer infused with AHA and blueberry extract that gently exfoliates and brightens.',
-            images: ['images/blue1.jpeg', 'images/blue2.jpeg', 'images/blue3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'huda-faux-filter',
-            brand: 'HUDA BEAUTY',
-            name: 'Faux Filter Foundation',
-            size: '',
-            price: 2750,
-            description: 'A full-coverage, long-wearing foundation with a natural matte finish. Blurs imperfections and hides blemishes.',
-            images: ['images/faux1.jpeg', 'images/faux2.jpeg', 'images/faux3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-wonka',
-            brand: 'SHEGLAM',
-            name: 'WONKA BAR Eye Shadow Palette',
-            size: '',
-            price: 650,
-            description: 'A versatile eye shadow palette featuring a mix of matte and shimmer shades inspired by WONKA BAR.',
-            images: ['images/wonka1.jpeg', 'images/wonka2.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'dr-althea-cream',
-            brand: 'DR. ALTHEA',
-            name: '345 Relief Cream',
-            size: '50ml',
-            price: 1350,
-            description: 'A soothing cream for normal to dry skin that helps fade pigmentation and melasma.',
-            images: ['images/althea1.jpeg', 'images/althea2.jpeg', 'images/althea3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'medicube-collagen-jelly',
-            brand: 'MEDICUBE',
-            name: 'Collagen Jelly Cream',
-            size: '50ml',
-            price: 900,
-            description: 'A jelly-textured cream that delivers intense hydration, shine, and smoothness.',
-            images: ['images/collagen1.jpeg', 'images/collagen2.jpeg', 'images/collagen3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'madagascar-light-oil',
-            brand: 'MADAGASCAR CENTELLA',
-            name: 'Light Cleansing Oil',
-            size: '200ml',
-            price: 950,
-            description: 'A lightweight cleansing oil that effectively removes dirt, white heads, black heads, and white sebum.',
-            images: ['images/light1.jpeg', 'images/light2.jpeg', 'images/light3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'medicube-sunscreen',
-            brand: 'MEDICUBE',
-            name: 'Collagen Glow Sunscreen SPF 50',
-            size: '50ml',
-            price: 1250,
-            description: 'A high-protection sunscreen with SPF 50 that leaves no white cast — just a radiant glow.',
-            images: ['images/medicube1.jpeg', 'images/medicube2.jpeg', 'images/medicube3.jpeg', 'images/medicube4.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'tocobo-sunscreen',
-            brand: 'TOCOBO',
-            name: 'Cica Complex Sun Sunscreen SPF 50+ PA++++',
-            size: '50ml',
-            price: 950,
-            description: 'A soothing sunscreen with SPF 50+ PA++++ that protects against UV rays while calming sensitive skin.',
-            images: ['images/tocobo1.jpeg', 'images/tocobo2.jpeg', 'images/tocobo3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'dalba-spray',
-            brand: 'D\'ALBA',
-            name: 'First Spray Serum',
-            size: '',
-            price: 1500,
-            description: 'A first spray serum that delivers radiant glow, deep hydration, and improved skin texture.',
-            images: ['images/alba1.jpeg', 'images/alba2.jpeg', 'images/alba3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'medicube-eye-mask',
-            brand: 'MEDICUBE',
-            name: 'PDRN Pink Collagen Eye Mask',
-            size: '1 pcs',
-            price: 100,
-            description: 'A rejuvenating eye mask infused with PDRN and pink collagen to brighten and firm the eye area.',
-            images: ['images/mask1.jpeg', 'images/mask2.jpeg', 'images/mask3.jpeg', 'images/mask4.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'celimax-cream',
-            brand: 'CELIMAX',
-            name: 'Pore + Dark Spot Brightening Cream',
-            size: '',
-            price: 1150,
-            description: 'A targeted cream that addresses enlarged pores and dark spots. Brightens and evens skin tone.',
-            images: ['images/celimax1.jpeg', 'images/celimax2.jpeg', 'images/celimax3.jpeg', 'images/celimax4.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'medicube-zero-pore',
-            brand: 'MEDICUBE',
-            name: 'Zero Pore One-day Serum',
-            size: '',
-            price: 1250,
-            description: 'A potent serum formulated with AHA, BHA, PHA, and Niacinamide to minimize pores and smooth texture.',
-            images: ['images/pore1.jpeg', 'images/pore2.jpeg', 'images/pore3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'anua-sun-cream',
-            brand: 'ANUA',
-            name: 'Heartleaf Silky Moisture Sun Cream',
-            size: '',
-            price: 1100,
-            description: 'A silky, moisture-rich sun cream infused with heartleaf extract. Provides SPF protection.',
-            images: ['images/sun1.jpeg', 'images/sun2.jpeg', 'images/sun3.jpeg', 'images/sun4.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'anua-mist',
-            brand: 'ANUA',
-            name: 'Pdrn + Hyaluronic Acid Hydrating Capsule Mist',
-            size: '100ml',
-            price: 1500,
-            description: 'A hydrating capsule mist infused with PDRN and hyaluronic acid that delivers deep moisture.',
-            images: ['images/acid1.jpeg', 'images/acid2.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'huda-lip-gloss',
-            brand: 'HUDA BEAUTY',
-            name: 'Faux Filter Lip Gloss',
-            size: '',
-            price: 1800,
-            description: 'A high-shine, non-sticky lip gloss that delivers intense color with a plush, comfortable feel.',
-            images: ['images/lip1.jpeg', 'images/lip2.jpeg', 'images/lip3.jpeg', 'images/lip4.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'sheglam-jam',
-            brand: 'SHEGLAM',
-            name: 'Jam Pocket Lip',
-            size: '',
-            price: 550,
-            description: 'A ultra-pigmented, long-lasting lip color with a smooth, creamy texture.',
-            images: ['images/jam1.jpeg', 'images/jam2.jpeg', 'images/jam3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'rare-highlighter',
-            brand: 'RARE BEAUTY',
-            name: 'Silky Touch Highlight Positive Light',
-            size: '',
-            price: 2650,
-            description: 'A silky, buildable highlighter that delivers a stunning, positive light glow.',
-            images: ['images/rare1.jpeg', 'images/rare2.jpeg', 'images/rare3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'arencia-booster',
-            brand: 'ARENCIA',
-            name: 'Nad+ Time+ Rewind Booster Shot',
-            size: '',
-            price: 1075,
-            description: 'A powerful booster shot formulated with Nad+ to rewind time and revitalize tired, sagging skin.',
-            images: ['images/arencia1.jpeg', 'images/arencia2.jpeg', 'images/arencia3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'medicube-sleep-mask',
-            brand: 'MEDICUBE',
-            name: 'PDRN Collagen Sleeping Mask',
-            size: '',
-            price: 850,
-            description: 'An overnight sleeping mask infused with PDRN and collagen that deeply nourishes and firms skin.',
-            images: ['images/sleep1.jpeg', 'images/sleep2.jpeg', 'images/sleep3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'dr-althea-mist',
-            brand: 'DR. ALTHEA',
-            name: '345 Mist Relief Cream Mist',
-            size: '100ml',
-            price: 1250,
-            description: 'A refreshing mist cream that soothes, hydrates, and calms irritated skin.',
-            images: ['images/relief1.jpeg', 'images/relief2.jpeg', 'images/relief3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }, {
-            id: 'joseon-sunscreen',
-            brand: 'BEAUTY OF JOSEON',
-            name: 'Relief Sun Rice + B5 SPF 50+ PA++++',
-            size: '',
-            price: 950,
-            description: 'A lightweight, non-greasy sunscreen with SPF 50+ PA++++ that protects and soothes.',
-            images: ['images/joseon1.jpeg', 'images/joseon2.jpeg', 'images/joseon3.jpeg'],
-            inStock: true,
-            isFromDb: false
-        }];
+        // Number of days a product is considered "New"
+        const NEW_BADGE_DAYS = 30;
 
         // ── Global state ──
         let cart = JSON.parse(localStorage.getItem('maisonCart')) || [];
-        let allProducts = [];
+        let allProducts = [];          // loaded exclusively from Supabase
         let filteredProducts = [];
         let currentFilter = 'default';
         let currentSearch = '';
+        let supabaseClient = null;
 
         // ── DOM refs ──
         const grid = document.getElementById('productGrid');
@@ -2220,17 +1841,78 @@
         const priceFilter = document.getElementById('priceFilter');
         const resultsCount = document.getElementById('resultsCount');
 
-        // ── Utility: create product card HTML ──
+        /* ============================================================
+           NORMALISATION HELPERS
+           ============================================================ */
+
+        // Accepts: array, JSON string, comma-separated string, null
+        function normalizeImages(raw) {
+            if (Array.isArray(raw)) {
+                return raw.map(s => String(s).trim()).filter(Boolean);
+            }
+            if (typeof raw === 'string') {
+                const s = raw.trim();
+                if (!s) return [];
+                if (s.startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(s);
+                        if (Array.isArray(parsed)) {
+                            return parsed.map(x => String(x).trim()).filter(Boolean);
+                        }
+                    } catch (_) { /* fall through to comma split */ }
+                }
+                return s.split(',').map(x => x.trim()).filter(Boolean);
+            }
+            return [];
+        }
+
+        function isTruthyFlag(value, defaultValue) {
+            if (value === undefined || value === null || value === '') return defaultValue;
+            if (typeof value === 'boolean') return value;
+            const s = String(value).toLowerCase().trim();
+            return !['false', '0', 'no', 'out', 'out_of_stock', 'out-of-stock'].includes(s);
+        }
+
+        // Map a raw Supabase row to the internal product shape
+        function normalizeProduct(row, index) {
+            const created = row.created_at ? new Date(row.created_at) : null;
+            const isNew = !!created && !isNaN(created.getTime()) &&
+                (Date.now() - created.getTime()) < NEW_BADGE_DAYS * 24 * 60 * 60 * 1000;
+
+            return {
+                id: String(row.id !== undefined && row.id !== null ? row.id : `db-${index}`),
+                brand: (row.brand || 'Maison De Glam').toString(),
+                name: (row.name || 'Product').toString(),
+                size: row.size ? row.size.toString() : '',
+                price: Number(row.price) || 0,
+                description: (row.description || '').toString(),
+                images: normalizeImages(row.images),
+                inStock: isTruthyFlag(row.in_stock, true),
+                promo: row.promo ? row.promo.toString() : '',
+                shades: row.shades ? row.shades.toString() : '',
+                isNew: isNew
+            };
+        }
+
+        /* ============================================================
+           PRODUCT CARD RENDERING
+           ============================================================ */
+
         function createProductCard(product, idx) {
             const stockClass = product.inStock ? 'in-stock' : 'out-of-stock';
             const stockText = product.inStock ? 'In Stock' : 'Out of Stock';
-            let extraInfo = '';
-            if (product.shades) {
-                extraInfo += `<div class="product-shades">Shades: ${product.shades}</div>`;
-            }
-            if (product.promo) {
-                extraInfo += `<div class="product-price"><span class="promo">${product.promo}</span></div>`;
-            }
+
+            // Slides: use real images, or a single placeholder slide
+            const slides = product.images.length ? product.images : [null];
+            const slideHTML = slides.map(img => {
+                if (!img) {
+                    return `<div class="carousel-slide slide-placeholder"><i class="fa-regular fa-image"></i></div>`;
+                }
+                return `
+                    <div class="carousel-slide">
+                        <img src="${img}" alt="${product.brand} ${product.name}" loading="lazy" onerror="this.style.display='none'" />
+                    </div>`;
+            }).join('');
 
             const card = document.createElement('div');
             card.className = 'product-card';
@@ -2239,18 +1921,13 @@
             card.dataset.name = product.name.toLowerCase();
             card.dataset.brand = product.brand.toLowerCase();
 
-            // Show "New" badge for database products
-            const newBadge = product.isFromDb ? `<span class="new-badge">New</span>` : '';
+            const newBadge = product.isNew ? `<span class="new-badge">New</span>` : '';
 
             card.innerHTML = `
                 <div class="carousel-container" data-product="${idx}">
                     ${newBadge}
                     <div class="carousel-slides" id="slides-${idx}">
-                        ${product.images.map(img => `
-                            <div class="carousel-slide">
-                                <img src="${img}" alt="${product.brand} ${product.name}" loading="lazy" onerror="this.style.display='none'" />
-                            </div>
-                        `).join('')}
+                        ${slideHTML}
                     </div>
                     ${product.images.length > 1 ? `
                         <button class="carousel-arrow prev" onclick="event.stopPropagation(); changeSlide(${idx}, -1, event)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -2270,12 +1947,16 @@
                     ${product.promo ? `<div class="product-price"><span class="promo">${product.promo}</span></div>` : ''}
                     ${product.shades ? `<div class="product-shades">Shades: ${product.shades}</div>` : ''}
                     <span class="stock-badge ${stockClass}">${stockText}</span>
-                    <button class="btn-add-cart" onclick="event.stopPropagation(); addToCart('${product.id}', event)">Add to Cart</button>
+                    <button class="btn-add-cart" ${product.inStock ? '' : 'disabled'} onclick="event.stopPropagation(); addToCart('${product.id}', event)">
+                        ${product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    </button>
                 </div>
             `;
 
             card.addEventListener('click', function(e) {
-                if (!e.target.closest('.carousel-arrow') && !e.target.closest('.carousel-dot') && !e.target.closest('.btn-add-cart')) {
+                if (!e.target.closest('.carousel-arrow') &&
+                    !e.target.closest('.carousel-dot') &&
+                    !e.target.closest('.btn-add-cart')) {
                     openModal(product.id);
                 }
             });
@@ -2283,12 +1964,15 @@
             return card;
         }
 
-        // ── Filter and search logic ──
+        /* ============================================================
+           FILTER / SORT / RENDER
+           ============================================================ */
+
         function filterAndSortProducts() {
             const searchTerm = currentSearch.toLowerCase().trim();
             const filter = currentFilter;
 
-            // First, filter by search
+            // Filter by search term (name, brand, description)
             let results = allProducts.filter(p => {
                 if (!searchTerm) return true;
                 const nameMatch = p.name.toLowerCase().includes(searchTerm);
@@ -2297,7 +1981,7 @@
                 return nameMatch || brandMatch || descMatch;
             });
 
-            // Then sort
+            // Sort
             switch (filter) {
                 case 'price-low':
                     results.sort((a, b) => a.price - b.price);
@@ -2312,12 +1996,7 @@
                     results.sort((a, b) => b.name.localeCompare(a.name));
                     break;
                 default:
-                    // Default: database products first, then by created_at / id
-                    results.sort((a, b) => {
-                        if (a.isFromDb && !b.isFromDb) return -1;
-                        if (!a.isFromDb && b.isFromDb) return 1;
-                        return 0;
-                    });
+                    // Default keeps the order returned by Supabase (created_at DESC)
                     break;
             }
 
@@ -2325,87 +2004,109 @@
             renderFilteredProducts();
         }
 
-        // ── Render filtered products ──
         function renderFilteredProducts() {
             grid.innerHTML = '';
+            slideIndices = {};
 
             if (filteredProducts.length === 0) {
-                grid.innerHTML = `<div class="no-results"><i class="fa-regular fa-face-frown" style="font-size:2rem;display:block;margin-bottom:1rem;"></i>No products found. Try adjusting your search.</div>`;
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fa-regular fa-face-frown"></i>
+                        No products found. Try adjusting your search.
+                    </div>`;
                 resultsCount.textContent = '0 products';
                 return;
             }
 
             filteredProducts.forEach((product, idx) => {
-                const card = createProductCard(product, idx);
-                grid.appendChild(card);
+                grid.appendChild(createProductCard(product, idx));
             });
 
-            resultsCount.textContent = `${filteredProducts.length} products`;
-
-            // Reset slide indices
-            filteredProducts.forEach((_, idx) => {
-                if (!slideIndices[idx]) slideIndices[idx] = 0;
-                const slides = document.getElementById(`slides-${idx}`);
-                if (slides) {
-                    slides.style.transform = `translateX(0)`;
-                    updateDots(idx, 0);
-                }
-            });
+            resultsCount.textContent = `${filteredProducts.length} product${filteredProducts.length === 1 ? '' : 's'}`;
         }
 
-        // ── Fetch from Supabase and combine ──
-        async function fetchAndRender() {
-            // Start with hardcoded products
-            allProducts = [...hardcodedProducts];
+        function showLoadingState() {
+            grid.innerHTML = `
+                <div class="no-results">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Loading our collection…
+                </div>`;
+            resultsCount.textContent = 'Loading…';
+        }
 
-            // Try to fetch from Supabase
+        function showErrorState(message) {
+            grid.innerHTML = `
+                <div class="no-results">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    ${message || 'We could not load the collection right now.'}
+                    <br />
+                    <button class="retry-btn" onclick="loadProducts()">Try Again</button>
+                </div>`;
+            resultsCount.textContent = 'Unavailable';
+        }
+
+        /* ============================================================
+           SUPABASE LOADING (the only product source)
+           ============================================================ */
+
+        async function loadProducts() {
+            showLoadingState();
+
             try {
-                const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                if (!supabaseClient) {
+                    if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+                        throw new Error('Supabase library not loaded');
+                    }
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+
                 const { data, error } = await supabaseClient
                     .from(TABLE_NAME)
                     .select('*')
                     .order('created_at', { ascending: false });
 
-                if (error) {
-                    console.warn('Supabase fetch error:', error);
-                } else if (data && data.length > 0) {
-                    const dbProducts = data.map(item => ({
-                        id: item.id || `db-${Math.random()}`,
-                        brand: item.brand || 'Brand',
-                        name: item.name || 'Product',
-                        size: item.size || '',
-                        price: item.price || 0,
-                        description: item.description || '',
-                        images: item.images || [],
-                        inStock: item.in_stock !== false,
-                        promo: item.promo || '',
-                        shades: item.shades || '',
-                        isFromDb: true // Mark as database product
-                    }));
+                if (error) throw error;
 
-                    const existingIds = new Set(allProducts.map(p => p.id));
-                    for (const dbProd of dbProducts) {
-                        if (!existingIds.has(dbProd.id)) {
-                            allProducts.push(dbProd);
-                            existingIds.add(dbProd.id);
-                        }
-                    }
+                const rows = Array.isArray(data) ? data : [];
+                allProducts = rows
+                    .map((row, i) => normalizeProduct(row, i))
+                    .filter(p => p && p.id);
+
+                if (allProducts.length === 0) {
+                    grid.innerHTML = `
+                        <div class="no-results">
+                            <i class="fa-regular fa-face-frown"></i>
+                            Our collection is being updated. Please check back soon.
+                        </div>`;
+                    resultsCount.textContent = '0 products';
+                    updateProductSchema([]);
+                    return;
                 }
+
+                filterAndSortProducts();
+                updateProductSchema(allProducts);
+
             } catch (err) {
-                console.warn('Supabase fetch exception:', err);
+                console.error('Failed to load products from Supabase:', err);
+                allProducts = [];
+                filteredProducts = [];
+                showErrorState('Unable to load products.');
+                updateProductSchema([]);
             }
-
-            // Apply initial filter/sort
-            filterAndSortProducts();
-
-            // Update JSON-LD schema with all products
-            updateProductSchema(allProducts);
         }
 
-        // ── Generate and inject JSON-LD schema ──
+        /* ============================================================
+           JSON-LD STRUCTURED DATA
+           ============================================================ */
+
         function updateProductSchema(products) {
             const script = document.getElementById('productSchema');
             if (!script) return;
+
+            if (!products || products.length === 0) {
+                script.textContent = '{}';
+                return;
+            }
 
             const schema = {
                 "@context": "https://schema.org",
@@ -2435,7 +2136,10 @@
             script.textContent = JSON.stringify(schema, null, 2);
         }
 
-        // ── Carousel controls ──
+        /* ============================================================
+           CAROUSEL (product cards)
+           ============================================================ */
+
         let slideIndices = {};
 
         function getSlideIndex(productIdx) {
@@ -2447,8 +2151,11 @@
             if (e) e.stopPropagation();
             const slides = document.getElementById(`slides-${productIdx}`);
             if (!slides) return;
-            const total = filteredProducts[productIdx].images.length;
-            if (!total) return;
+            const product = filteredProducts[productIdx];
+            if (!product) return;
+            const total = product.images.length;
+            if (total < 2) return;
+
             let current = getSlideIndex(productIdx);
             current = (current + dir + total) % total;
             slideIndices[productIdx] = current;
@@ -2484,7 +2191,10 @@
             }
         });
 
-        // ── Full-screen modal ──
+        /* ============================================================
+           FULL-SCREEN PRODUCT DETAIL MODAL
+           ============================================================ */
+
         let modalSlideIndex = 0;
         let modalProductId = null;
         let modalQty = 1;
@@ -2492,12 +2202,25 @@
         function openModal(productId) {
             const product = allProducts.find(p => p.id === productId);
             if (!product) return;
+
             modalProductId = productId;
             modalSlideIndex = 0;
             modalQty = 1;
 
             const stockClass = product.inStock ? 'in-stock' : 'out-of-stock';
             const stockText = product.inStock ? 'In Stock' : 'Out of Stock';
+
+            const slides = product.images.length ? product.images : [null];
+            const slideHTML = slides.map(img => {
+                if (!img) {
+                    return `<div class="carousel-slide slide-placeholder"><i class="fa-regular fa-image"></i></div>`;
+                }
+                return `
+                    <div class="carousel-slide">
+                        <img src="${img}" alt="${product.brand} ${product.name}" loading="lazy" onerror="this.style.display='none'" />
+                    </div>`;
+            }).join('');
+
             let extraInfo = '';
             if (product.shades) extraInfo += `<div class="shades">Shades: ${product.shades}</div>`;
             if (product.promo) extraInfo += `<div class="promo">${product.promo}</div>`;
@@ -2505,11 +2228,7 @@
             modalBody.innerHTML = `
                 <div class="modal-carousel">
                     <div class="carousel-slides" id="modalSlides">
-                        ${product.images.map(img => `
-                            <div class="carousel-slide">
-                                <img src="${img}" alt="${product.brand} ${product.name}" loading="lazy" onerror="this.style.display='none'" />
-                            </div>
-                        `).join('')}
+                        ${slideHTML}
                     </div>
                     ${product.images.length > 1 ? `
                         <button class="carousel-arrow prev" onclick="changeModalSlide(-1, event)"><i class="fa-solid fa-chevron-left"></i></button>
@@ -2538,13 +2257,16 @@
                                 <button onclick="changeModalQty(1)">+</button>
                             </div>
                         </div>
-                        <button class="modal-add-btn" id="modalAddBtn" onclick="addFromModal()">Add to Cart</button>
+                        <button class="modal-add-btn" id="modalAddBtn" onclick="addFromModal()" ${product.inStock ? '' : 'disabled'}>
+                            ${product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                        </button>
                     </div>
                 </div>
             `;
 
-            const slides = document.getElementById('modalSlides');
-            if (slides) slides.style.transform = 'translateX(0)';
+            const modalSlides = document.getElementById('modalSlides');
+            if (modalSlides) modalSlides.style.transform = 'translateX(0)';
+
             modal.classList.add('open');
             document.body.style.overflow = 'hidden';
         }
@@ -2561,6 +2283,7 @@
             const product = allProducts.find(p => p.id === modalProductId);
             if (!product) return;
             const total = product.images.length;
+            if (total < 2) return;
             modalSlideIndex = (modalSlideIndex + dir + total) % total;
             updateModalSlide();
         }
@@ -2592,7 +2315,7 @@
         function addFromModal() {
             if (!modalProductId) return;
             const product = allProducts.find(p => p.id === modalProductId);
-            if (!product) return;
+            if (!product || !product.inStock) return;
 
             const existing = cart.find(item => item.id === modalProductId);
             if (existing) {
@@ -2610,15 +2333,21 @@
             }
             saveCart();
             updateCartUI();
+
             modalQty = 1;
             const qtyEl = document.getElementById('modalQty');
             if (qtyEl) qtyEl.textContent = 1;
+
             const btn = document.getElementById('modalAddBtn');
-            btn.textContent = 'Added ✓';
-            btn.classList.add('added');
+            if (btn) {
+                btn.textContent = 'Added ✓';
+                btn.classList.add('added');
+            }
             setTimeout(() => {
-                btn.textContent = 'Add to Cart';
-                btn.classList.remove('added');
+                if (btn) {
+                    btn.textContent = 'Add to Cart';
+                    btn.classList.remove('added');
+                }
             }, 1500);
             setTimeout(() => {
                 closeModal();
@@ -2626,11 +2355,14 @@
             }, 400);
         }
 
-        // ── Cart functions ──
+        /* ============================================================
+           CART
+           ============================================================ */
+
         function addToCart(productId, e) {
             if (e) e.stopPropagation();
             const product = allProducts.find(p => p.id === productId);
-            if (!product) return;
+            if (!product || !product.inStock) return;
 
             const existing = cart.find(item => item.id === productId);
             if (existing) {
@@ -2648,7 +2380,8 @@
             }
             saveCart();
             updateCartUI();
-            if (e) {
+
+            if (e && e.target && e.target.classList.contains('btn-add-cart')) {
                 const btn = e.target;
                 btn.classList.add('added');
                 btn.textContent = 'Added ✓';
@@ -2685,6 +2418,7 @@
         function updateCartUI() {
             const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
             cartBadge.textContent = totalItems;
+
             if (cart.length === 0) {
                 cartItems.innerHTML = `
                     <div class="cart-empty">
@@ -2715,6 +2449,7 @@
                 cartItems.innerHTML = html;
                 checkoutBtn.disabled = false;
             }
+
             const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
             cartTotal.textContent = `Rs ${total.toLocaleString()}`;
         }
@@ -2729,9 +2464,7 @@
         function toggleCart(e) {
             if (e) e.preventDefault();
             const overlay = document.getElementById('cartOverlay');
-            const sidebar = document.getElementById('cartSidebar');
-            const isOpen = overlay.classList.contains('open');
-            if (isOpen) {
+            if (overlay.classList.contains('open')) {
                 closeCart();
             } else {
                 openCart();
@@ -2758,7 +2491,10 @@
             window.open(`https://wa.me/23057545067?text=${orderSummary}`, '_blank');
         }
 
-        // ── Nav toggle ──
+        /* ============================================================
+           NAV / PRELOADER / HERO VIDEO
+           ============================================================ */
+
         function toggleNav() {
             document.getElementById('navLinks').classList.toggle('open');
         }
@@ -2768,7 +2504,7 @@
             });
         });
 
-        // ── Preloader ──
+        // Preloader
         (function() {
             const preloader = document.getElementById('preloader');
             window.addEventListener('load', () => {
@@ -2779,34 +2515,48 @@
             }, 3000);
         })();
 
-        // ── Hero video ──
+        // Hero video fade in/out
         (function() {
             const video = document.getElementById('heroVideo');
             if (!video) return;
             let raf = null;
             let state = 'idle';
+
             function updateFade() {
-                if (!video.duration) { raf = requestAnimationFrame(updateFade); return; }
+                if (!video.duration) {
+                    raf = requestAnimationFrame(updateFade);
+                    return;
+                }
                 const t = video.currentTime,
                     d = video.duration;
-                if (t < 0.5 && state !== 'in') { state = 'in';
-                    video.style.opacity = Math.min(t / 0.5, 1); } else if (t >= 0.5 && state === 'in') { video.style
-                        .opacity = 1;
-                    state = 'idle'; }
-                if (d - t < 0.5 && state !== 'out') { state = 'out';
+
+                if (t < 0.5 && state !== 'in') {
+                    state = 'in';
+                    video.style.opacity = Math.min(t / 0.5, 1);
+                } else if (t >= 0.5 && state === 'in') {
+                    video.style.opacity = 1;
+                    state = 'idle';
+                }
+                if (d - t < 0.5 && state !== 'out') {
+                    state = 'out';
                     const p = (d - t) / 0.5;
-                    video.style.opacity = Math.min(p, 1); } else if (d - t >= 0.5 && state === 'out') { video.style
-                        .opacity = 1;
-                    state = 'idle'; }
+                    video.style.opacity = Math.min(p, 1);
+                } else if (d - t >= 0.5 && state === 'out') {
+                    video.style.opacity = 1;
+                    state = 'idle';
+                }
                 raf = requestAnimationFrame(updateFade);
             }
 
             function onEnded() {
                 video.style.opacity = '0';
                 state = 'idle';
-                setTimeout(() => { video.currentTime = 0;
-                    video.play().catch(() => {}); }, 120);
+                setTimeout(() => {
+                    video.currentTime = 0;
+                    video.play().catch(() => {});
+                }, 120);
             }
+
             video.addEventListener('ended', onEnded);
             video.addEventListener('loadedmetadata', () => {
                 video.currentTime = 0;
@@ -2821,7 +2571,10 @@
             }
         })();
 
-        // ── Event listeners for filter & search ──
+        /* ============================================================
+           EVENT LISTENERS
+           ============================================================ */
+
         searchInput.addEventListener('input', function() {
             currentSearch = this.value;
             filterAndSortProducts();
@@ -2832,11 +2585,7 @@
             filterAndSortProducts();
         });
 
-        // ── Init ──
-        fetchAndRender();
-        updateCartUI();
-
-        // Close modal on Escape
+        // Close modal / cart on Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeModal();
@@ -2844,7 +2593,15 @@
             }
         });
 
+        /* ============================================================
+           INIT
+           ============================================================ */
+
+        loadProducts();
+        updateCartUI();
+
         // Expose functions globally for inline onclick
+        window.loadProducts = loadProducts;
         window.toggleCart = toggleCart;
         window.closeCart = closeCart;
         window.checkoutWhatsApp = checkoutWhatsApp;
@@ -2859,6 +2616,7 @@
         window.addToCart = addToCart;
         window.removeFromCart = removeFromCart;
         window.updateQty = updateQty;
+        window.toggleNav = toggleNav;
     </script>
 
 </body>
